@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kiyaro Countdown . . .</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕒</text></svg>">
+  <style>
+    :root {
+      --bg: #0f1226;
+      --card: #14183a;
+      --accent: #7c5cff;
+      --accent-2: #00e0b8;
+      --text: #e6e9ff;
+      --muted: #b9c0ff;
+      --danger: #ff6b6b;
+      --shadow: 0 20px 45px rgba(0,0,0,.35);
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 800px at 20% 10%, #15183a 0%, #0f1226 60%, #0c0f20 100%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .app {
+      width: min(920px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    header {
+      padding: 28px 24px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(124,92,255,.18), rgba(0,224,184,.12));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      font-size: 2.5rem;
+      font-style: oblique;
+      /* color: #05133d ;   */
+    }
+    .title .emoji { font-size: 28px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+    .controls {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .btn, .input {
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 14px;
+      backdrop-filter: blur(6px);
+    }
+    .btn { cursor: pointer; transition: transform .06s ease, background .2s ease; }
+    .btn:hover { background: rgba(255,255,255,.08); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { border-color: rgba(124,92,255,.6); background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(0,224,184,.25)); }
+    .btn.danger { border-color: rgba(255,107,107,.5); background: linear-gradient(135deg, rgba(255,107,107,.35), rgba(255,107,107,.15)); }
+    .input[type="date"] { padding: 9px 12px; }
+
+    main { padding: 26px 24px 30px; }
+    .timer {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0 14px;
+    }
+    .tile {
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px; padding: 18px; text-align: center;
+    }
+    .tile h2 { margin: 0; font-size: clamp(34px, 5vw, 56px); line-height: 1; letter-spacing: 1px; }
+    .tile p { margin: 6px 0 0; color: var(--muted); font-size: 13px; letter-spacing: .4px; }
+
+    .big-date { margin-top: 6px; font-size: 14px; color: var(--muted); }
+
+    .progress {
+      margin-top: 18px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      height: 14px; border-radius: 999px; overflow: hidden; position: relative;
+    }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .6s; }
+    .progress span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: var(--text); mix-blend-mode: screen; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+
+    .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .badge { font-size: 12px; color: var(--muted); background: rgba(255,255,255,.06); padding: 6px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; }
+
+    footer { padding: 16px 20px; color: var(--muted); font-size: 12px; text-align: center; border-top: 1px solid rgba(255,255,255,.08); }
+
+    @media (max-width: 720px) {
+      .timer { grid-template-columns: repeat(2, 1fr); }
+      header { flex-direction: column; align-items: flex-start; }
+      .controls { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <div class="title"><span class="emoji">⏳</span> <span>Kiyaro</span></div>
+        <div id="status" class="subtitle">Tick Tock, Count Time Your Way.</div>
+      </div>
+      <div class="controls">
+        <input class="input" type="date" id="fromDate" />
+        <input class="input" type="date" id="toDate" />
+        <button class="btn primary" id="startBtn">Start Countdown</button>
+        <button class="btn danger" id="reset">Reset</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="timer">
+        <div class="tile"><h2 id="days">0</h2><p>Days</p></div>
+        <div class="tile"><h2 id="hours">00</h2><p>Hours</p></div>
+        <div class="tile"><h2 id="minutes">00</h2><p>Minutes</p></div>
+        <div class="tile"><h2 id="seconds">00</h2><p>Seconds</p></div>
+      </div>
+      <div class="big-date">Ends on: <strong id="endDate">—</strong></div>
+
+      <div class="progress">
+        <div class="bar" id="bar"></div>
+        <span id="percent">0%</span>
+      </div>
+
+      <div class="badges">
+        <div class="badge" id="elapsedBadge">Elapsed: 0 days</div>
+        <div class="badge" id="remainingBadge">Remaining: 0 days</div>
+      </div>
+    </main>
+
+    <footer>
+      Tip: choose both dates to start your countdown.
+    </footer>
+  </div>
+
+  <script>
+    let countdown;
+    const DAY = 24 * 60 * 60 * 1000;
+    const pad = n => String(n).padStart(2, '0');
+
+    const el = {
+      days: document.getElementById('days'),
+      hours: document.getElementById('hours'),
+      minutes: document.getElementById('minutes'),
+      seconds: document.getElementById('seconds'),
+      endDate: document.getElementById('endDate'),
+      bar: document.getElementById('bar'),
+      percent: document.getElementById('percent'),
+      status: document.getElementById('status'),
+      elapsedBadge: document.getElementById('elapsedBadge'),
+      remainingBadge: document.getElementById('remainingBadge'),
+      from: document.getElementById('fromDate'),
+      to: document.getElementById('toDate'),
+      startBtn: document.getElementById('startBtn'),
+      reset: document.getElementById('reset')
+    };
+
+    function tick(fromDate, toDate){
+      const now = new Date();
+
+      if(now < fromDate){
+        el.status.textContent = "Countdown will start on your chosen 'From' date.";
+        return;
+      }
+
+      const diff = toDate - now;
+      const elapsed = now - fromDate;
+      const total = toDate - fromDate;
+
+      if(diff <= 0){
+        clearInterval(countdown);
+        el.status.textContent = "🎉 Countdown Complete!";
+        el.days.textContent = 0;
+        el.hours.textContent = "00";
+        el.minutes.textContent = "00";
+        el.seconds.textContent = "00";
+        el.bar.style.width = "100%";
+        el.percent.textContent = "100%";
+        return;
+      }
+
+      const days = Math.floor(diff / DAY);
+      const hours = Math.floor((diff % DAY) / (1000*60*60));
+      const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
+      const seconds = Math.floor((diff % (1000*60)) / 1000);
+
+      el.days.textContent = days;
+      el.hours.textContent = pad(hours);
+      el.minutes.textContent = pad(minutes);
+      el.seconds.textContent = pad(seconds);
+      el.endDate.textContent = toDate.toLocaleString();
+
+      const pct = Math.min(100, (elapsed / total) * 100);
+      el.bar.style.width = pct.toFixed(2) + '%';
+      el.percent.textContent = pct.toFixed(1) + '%';
+
+      el.elapsedBadge.textContent = `Elapsed: ${Math.floor(elapsed / DAY)} days`;
+      el.remainingBadge.textContent = `Remaining: ${days} days`;
+
+      el.status.textContent = "Counting down…";
+    }
+
+    el.startBtn.addEventListener('click', () => {
+      clearInterval(countdown);
+      const fromDate = new Date(el.from.value);
+      const toDate = new Date(el.to.value);
+
+      if(isNaN(fromDate) || isNaN(toDate) || toDate <= fromDate){
+        el.status.textContent = "⚠️ Please choose valid dates.";
+        return;
+      }
+
+      tick(fromDate, toDate);
+      countdown = setInterval(() => tick(fromDate, toDate), 1000);
+    });
+
+    el.reset.addEventListener('click', () => {
+      clearInterval(countdown);
+      el.from.value = "";
+      el.to.value = "";
+      el.status.textContent = "Select your start and end dates to begin.";
+      el.days.textContent = 0;
+      el.hours.textContent = "00";
+      el.minutes.textContent = "00";
+      el.seconds.textContent = "00";
+      el.bar.style.width = "0%";
+      el.percent.textContent = "0%";
+      el.elapsedBadge.textContent = "Elapsed: 0 days";
+      el.remainingBadge.textContent = "Remaining: 0 days";
+      el.endDate.textContent = "—";
+    });
+  </script>
+</body>
+</html>
