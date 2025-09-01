@@ -1,0 +1,69 @@
+{
+  "name": "kiyaro-clocktimer",
+  "productName": "Kiyaro Countdown Timer",
+  "version": "1.0.0",
+  "description": "A beautiful desktop countdown timer app. Tick Tock, Count Time Your Way!",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-all": "electron-builder --win --linux --mac",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vipex650/Kiyaro-ClockTimer.git"
+  },
+  "keywords": [
+    "countdown",
+    "timer",
+    "desktop",
+    "electron",
+    "kiyaro"
+  ],
+  "author": "Anuj Gupta <anujmodanwal708042@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vipex650/Kiyaro-ClockTimer/issues"
+  },
+  "homepage": "https://github.com/vipex650/Kiyaro-ClockTimer#readme",
+  "build": {
+    "appId": "com.kiyaro.countdown-timer",
+    "productName": "Kiyaro Countdown Timer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "assets/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "forceCodeSigning": false
+    },
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.4.0",
+    "electron-builder": "^26.0.12"
+  }
+}
