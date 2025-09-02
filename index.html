@@ -35,6 +35,14 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
+      height: 74vh;
+      display: flex;
+      flex-direction: column;
+    }
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
     }
     header {
       padding: 18px 24px 10px;
@@ -54,26 +62,40 @@
       font-size: 2rem;
       font-style: oblique;
     }
-    .title .emoji { font-size: 24px; }
-    .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
-
-/* Header Clock */
-#liveClock {
-  font-weight: 700;
-  font-size: 31px;      /* bigger than before */
-  color: #e6e9ff;  /* changed to white */
-  background: rgba(255,255,255,.08);
-  padding: 10px 16px;     /* more padding */
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.15);
-  text-align: center;
-  min-width: 175px;       /* wider for bigger text */
-}
-
-
-    .controls {
-      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    #liveClock {
+      font-weight: 700;
+      font-size: 31px;
+      color: #e6e9ff;
+      background: rgba(255,255,255,.08);
+      padding: 10px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.15);
+      text-align: center;
+      min-width: 175px;
     }
+    nav {
+      display: flex;
+      gap: 20px;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(135deg, rgba(124,92,255,.08), rgba(0,224,184,.05));
+    }
+    nav .btn {
+      flex: 1;
+      cursor: pointer;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      color: var(--text);
+    }
+    nav .btn.active {
+      background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(0,224,184,.25));
+      border-color: rgba(124,92,255,.6);
+    }
+    section { display: none; }
+    section.active { display: block; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .btn, .input {
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,.14);
@@ -83,58 +105,18 @@
       font-size: 14px;
       backdrop-filter: blur(6px);
     }
-    .btn { cursor: pointer; transition: transform .06s ease, background .2s ease; }
-    .btn:hover { background: rgba(255,255,255,.08); }
-    .btn:active { transform: translateY(1px); }
     .btn.primary { border-color: rgba(124,92,255,.6); background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(0,224,184,.25)); }
     .btn.danger { border-color: rgba(255,107,107,.5); background: linear-gradient(135deg, rgba(255,107,107,.35), rgba(255,107,107,.15)); }
-    .input[type="date"] { padding: 9px 12px; }
-
-    nav {
-      display: flex;
-      gap: 20px;
-      padding: 16px 24px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      background: linear-gradient(135deg, rgba(124,92,255,.08), rgba(0,224,184,.05));
-    }
-    nav .btn { flex: 1; }
-
-    main { padding: 26px 24px 30px; }
-    .controls-section { display: flex;  margin-bottom: 20px; }
-    .timer {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0 14px;
-    }
-    .tile {
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 18px; padding: 18px; text-align: center;
-    }
+    .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0 14px; }
+    .tile { background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 18px; text-align: center; }
     .tile h2 { margin: 0; font-size: clamp(34px, 5vw, 56px); line-height: 1; letter-spacing: 1px; }
     .tile p { margin: 6px 0 0; color: var(--muted); font-size: 13px; letter-spacing: .4px; }
-
-    .big-date { margin-top: 6px; font-size: 14px; color: var(--muted); }
-
-    .progress {
-      margin-top: 18px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.1);
-      height: 14px; border-radius: 999px; overflow: hidden; position: relative;
-    }
+    .progress { margin-top: 18px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); height: 14px; border-radius: 999px; overflow: hidden; position: relative; }
     .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .6s; }
-    .progress span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: var(--text); mix-blend-mode: screen; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
-
+    .progress span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; }
     .badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-    .badge { font-size: 12px; color: var(--muted); background: rgba(255,255,255,.06); padding: 6px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; }
-
+    .badge { font-size: 12px; background: rgba(255,255,255,.06); padding: 6px 10px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; }
     footer { padding: 16px 20px; color: var(--muted); font-size: 12px; text-align: center; border-top: 1px solid rgba(255,255,255,.08); }
-
-    @media (max-width: 720px) {
-      .timer { grid-template-columns: repeat(2, 1fr); }
-      header { flex-direction: column; align-items: flex-start; }
-      .controls { width: 100%; justify-content: center; }
-      nav { flex-direction: column; }
-      nav .btn { width: 100%; }
-    }
   </style>
 </head>
 <body>
@@ -148,43 +130,55 @@
     </header>
 
     <nav>
-      <button class="btn">Timer</button>
-      <button class="btn">To Do List</button>
-      <button class="btn">Stopwatch</button>
+      <button class="btn active" data-page="timer">Timer</button>
+      <button class="btn" data-page="todo">To Do List</button>
+      <button class="btn" data-page="stopwatch">Stopwatch</button>
     </nav>
 
     <main>
-      <section class="controls-section">
+      <!-- Timer Section -->
+      <section id="timerSection" class="active">
         <div class="controls">
           <input class="input" type="date" id="fromDate" />
           <input class="input" type="date" id="toDate" />
           <button class="btn primary" id="startBtn">Start Countdown</button>
           <button class="btn danger" id="reset">Reset</button>
         </div>
+        <div class="timer">
+          <div class="tile"><h2 id="days">0</h2><p>Days</p></div>
+          <div class="tile"><h2 id="hours">00</h2><p>Hours</p></div>
+          <div class="tile"><h2 id="minutes">00</h2><p>Minutes</p></div>
+          <div class="tile"><h2 id="seconds">00</h2><p>Seconds</p></div>
+        </div>
+        <div class="big-date">Ends on: <strong id="endDate">—</strong></div>
+        <div class="progress">
+          <div class="bar" id="bar"></div>
+          <span id="percent">0%</span>
+        </div>
+        <div class="badges">
+          <div class="badge" id="elapsedBadge">Elapsed: 0 days</div>
+          <div class="badge" id="remainingBadge">Remaining: 0 days</div>
+        </div>
       </section>
 
-      <div class="timer">
-        <div class="tile"><h2 id="days">0</h2><p>Days</p></div>
-        <div class="tile"><h2 id="hours">00</h2><p>Hours</p></div>
-        <div class="tile"><h2 id="minutes">00</h2><p>Minutes</p></div>
-        <div class="tile"><h2 id="seconds">00</h2><p>Seconds</p></div>
-      </div>
-      <div class="big-date">Ends on: <strong id="endDate">—</strong></div>
+      <!-- To-Do Section -->
+      <section id="todoSection">
+        <h2>To-Do List</h2>
+        <input class="input" id="taskInput" placeholder="Add task" />
+        <button class="btn primary" id="addTask">Add</button>
+        <ul id="taskList"></ul>
+      </section>
 
-      <div class="progress">
-        <div class="bar" id="bar"></div>
-        <span id="percent">0%</span>
-      </div>
-
-      <div class="badges">
-        <div class="badge" id="elapsedBadge">Elapsed: 0 days</div>
-        <div class="badge" id="remainingBadge">Remaining: 0 days</div>
-      </div>
+      <!-- Stopwatch Section -->
+      <section id="stopwatchSection">
+        <h2>Stopwatch</h2>
+        <div id="stopwatchDisplay">00:00:00</div>
+        <button class="btn primary" id="startStopwatch">Start</button>
+        <button class="btn danger" id="resetStopwatch">Reset</button>
+      </section>
     </main>
 
-    <footer>
-      Tip: choose both dates to start your countdown.
-    </footer>
+    <footer>Tip: choose both dates to start your countdown.</footer>
   </div>
 
   <script>
@@ -211,12 +205,7 @@
 
     function tick(fromDate, toDate){
       const now = new Date();
-
-      if(now < fromDate){
-        el.status.textContent = "Countdown will start on your chosen 'From' date.";
-        return;
-      }
-
+      if(now < fromDate){ el.status.textContent = "Countdown will start on your chosen 'From' date."; return; }
       const diff = toDate - now;
       const elapsed = now - fromDate;
       const total = toDate - fromDate;
@@ -232,25 +221,20 @@
         el.percent.textContent = "100%";
         return;
       }
-
       const days = Math.floor(diff / DAY);
       const hours = Math.floor((diff % DAY) / (1000*60*60));
       const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
       const seconds = Math.floor((diff % (1000*60)) / 1000);
-
       el.days.textContent = days;
       el.hours.textContent = pad(hours);
       el.minutes.textContent = pad(minutes);
       el.seconds.textContent = pad(seconds);
       el.endDate.textContent = toDate.toLocaleString();
-
       const pct = Math.min(100, (elapsed / total) * 100);
       el.bar.style.width = pct.toFixed(2) + '%';
       el.percent.textContent = pct.toFixed(1) + '%';
-
       el.elapsedBadge.textContent = `Elapsed: ${Math.floor(elapsed / DAY)} days`;
       el.remainingBadge.textContent = `Remaining: ${days} days`;
-
       el.status.textContent = "Counting down…";
     }
 
@@ -258,12 +242,9 @@
       clearInterval(countdown);
       const fromDate = new Date(el.from.value);
       const toDate = new Date(el.to.value);
-
       if(isNaN(fromDate) || isNaN(toDate) || toDate <= fromDate){
-        el.status.textContent = "⚠️ Please choose valid dates.";
-        return;
+        el.status.textContent = "⚠️ Please choose valid dates."; return;
       }
-
       tick(fromDate, toDate);
       countdown = setInterval(() => tick(fromDate, toDate), 1000);
     });
@@ -287,13 +268,20 @@
     // Live Clock
     function updateClock() {
       const now = new Date();
-      const hours = pad(now.getHours());
-      const minutes = pad(now.getMinutes());
-      const seconds = pad(now.getSeconds());
-      document.getElementById('liveClock').textContent = `${hours}:${minutes}:${seconds}`;
+      document.getElementById('liveClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Navigation
+    document.querySelectorAll("nav .btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("nav .btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.querySelectorAll("main section").forEach(sec => sec.classList.remove("active"));
+        document.getElementById(btn.dataset.page + "Section").classList.add("active");
+      });
+    });
   </script>
 </body>
 </html>
