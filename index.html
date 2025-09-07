@@ -93,8 +93,7 @@
       background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(0,224,184,.25));
       border-color: rgba(124,92,255,.6);
     }
-    section { display: none; }
-    section.active { display: block; }
+  
     .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
     .btn, .input {
       border-radius: 14px;
@@ -105,6 +104,93 @@
       font-size: 14px;
       backdrop-filter: blur(6px);
     }
+
+    /* To-Do List Styling */
+.task-list {
+  list-style: none;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.task-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,.1);
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.task-list li:hover {
+  transform: translateY(-2px);
+  background: rgba(124,92,255,0.1);
+}
+
+.task-list li.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.task-list li .task-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-list li .task-left input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.task-list li button {
+  background: rgba(255,107,107,0.2);
+  border: none;
+  padding: 6px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.task-list li button:hover {
+  background: rgba(255,107,107,0.4);
+}
+
+
+    /* Stopwatch Styling */
+    #stopwatchDisplay {
+      font-size: clamp(28px, 8vw, 64px); /* responsive font size */
+      font-weight: bold;
+      text-align: center;
+      margin: 18px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 15px 20px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #stopwatchSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #stopwatchSection button {
+      min-width: 120px;
+      font-size: 16px;
+    }
+
     .btn.primary { border-color: rgba(124,92,255,.6); background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(0,224,184,.25)); }
     .btn.danger { border-color: rgba(255,107,107,.5); background: linear-gradient(135deg, rgba(255,107,107,.35), rgba(255,107,107,.15)); }
     .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0 14px; }
@@ -124,7 +210,7 @@
     <header>
       <div>
         <div class="title"><span class="emoji">⏳</span> <span>Kiyaro</span></div>
-        <div id="status" class="subtitle">Tick Tock, Count Time Your Way.</div>
+        <div id="status" class="subtitle" aria-live="polite">Tick Tock, Count Time Your Way.</div>
       </div>
       <div id="liveClock">00:00:00</div>
     </header>
@@ -164,10 +250,13 @@
       <!-- To-Do Section -->
       <section id="todoSection">
         <h2>To-Do List</h2>
-        <input class="input" id="taskInput" placeholder="Add task" />
-        <button class="btn primary" id="addTask">Add</button>
-        <ul id="taskList"></ul>
+        <div class="controls">
+            <input class="input" id="taskInput" placeholder="Add a new task" />
+            <button class="btn primary" id="addTask">Add</button>
+        </div>
+        <ul id="taskList" class="task-list"></ul>
       </section>
+
 
       <!-- Stopwatch Section -->
       <section id="stopwatchSection">
@@ -181,107 +270,272 @@
     <footer>Tip: choose both dates to start your countdown.</footer>
   </div>
 
-  <script>
-    let countdown;
-    const DAY = 24 * 60 * 60 * 1000;
-    const pad = n => String(n).padStart(2, '0');
+<script>
+  let countdown;
+  const DAY = 24 * 60 * 60 * 1000;
+  const pad = n => String(n).padStart(2, '0');
 
-    const el = {
-      days: document.getElementById('days'),
-      hours: document.getElementById('hours'),
-      minutes: document.getElementById('minutes'),
-      seconds: document.getElementById('seconds'),
-      endDate: document.getElementById('endDate'),
-      bar: document.getElementById('bar'),
-      percent: document.getElementById('percent'),
-      status: document.getElementById('status'),
-      elapsedBadge: document.getElementById('elapsedBadge'),
-      remainingBadge: document.getElementById('remainingBadge'),
-      from: document.getElementById('fromDate'),
-      to: document.getElementById('toDate'),
-      startBtn: document.getElementById('startBtn'),
-      reset: document.getElementById('reset')
-    };
+  const el = {
+    days: document.getElementById('days'),
+    hours: document.getElementById('hours'),
+    minutes: document.getElementById('minutes'),
+    seconds: document.getElementById('seconds'),
+    endDate: document.getElementById('endDate'),
+    bar: document.getElementById('bar'),
+    percent: document.getElementById('percent'),
+    status: document.getElementById('status'),
+    elapsedBadge: document.getElementById('elapsedBadge'),
+    remainingBadge: document.getElementById('remainingBadge')
+  };
 
-    function tick(fromDate, toDate){
-      const now = new Date();
-      if(now < fromDate){ el.status.textContent = "Countdown will start on your chosen 'From' date."; return; }
-      const diff = toDate - now;
-      const elapsed = now - fromDate;
-      const total = toDate - fromDate;
+  function tick(fromDate, toDate){
+    const now = new Date();
+    const diff = toDate - now;
+    const elapsed = now - fromDate;
+    const total = toDate - fromDate;
 
-      if(diff <= 0){
-        clearInterval(countdown);
-        el.status.textContent = "🎉 Countdown Complete!";
-        el.days.textContent = 0;
-        el.hours.textContent = "00";
-        el.minutes.textContent = "00";
-        el.seconds.textContent = "00";
-        el.bar.style.width = "100%";
-        el.percent.textContent = "100%";
-        return;
-      }
-      const days = Math.floor(diff / DAY);
-      const hours = Math.floor((diff % DAY) / (1000*60*60));
-      const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
-      const seconds = Math.floor((diff % (1000*60)) / 1000);
-      el.days.textContent = days;
-      el.hours.textContent = pad(hours);
-      el.minutes.textContent = pad(minutes);
-      el.seconds.textContent = pad(seconds);
-      el.endDate.textContent = toDate.toLocaleString();
-      const pct = Math.min(100, (elapsed / total) * 100);
-      el.bar.style.width = pct.toFixed(2) + '%';
-      el.percent.textContent = pct.toFixed(1) + '%';
-      el.elapsedBadge.textContent = `Elapsed: ${Math.floor(elapsed / DAY)} days`;
-      el.remainingBadge.textContent = `Remaining: ${days} days`;
-      el.status.textContent = "Counting down…";
-    }
-
-    el.startBtn.addEventListener('click', () => {
+    if(diff <= 0){
       clearInterval(countdown);
-      const fromDate = new Date(el.from.value);
-      const toDate = new Date(el.to.value);
-      if(isNaN(fromDate) || isNaN(toDate) || toDate <= fromDate){
-        el.status.textContent = "⚠️ Please choose valid dates."; return;
-      }
-      tick(fromDate, toDate);
-      countdown = setInterval(() => tick(fromDate, toDate), 1000);
-    });
-
-    el.reset.addEventListener('click', () => {
-      clearInterval(countdown);
-      el.from.value = "";
-      el.to.value = "";
-      el.status.textContent = "Select your start and end dates to begin.";
+      el.status.textContent = "🎉 Countdown Complete!";
       el.days.textContent = 0;
       el.hours.textContent = "00";
       el.minutes.textContent = "00";
       el.seconds.textContent = "00";
-      el.bar.style.width = "0%";
-      el.percent.textContent = "0%";
-      el.elapsedBadge.textContent = "Elapsed: 0 days";
-      el.remainingBadge.textContent = "Remaining: 0 days";
-      el.endDate.textContent = "—";
-    });
-
-    // Live Clock
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('liveClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+      el.bar.style.width = "100%";
+      el.percent.textContent = "100%";
+      return;
     }
-    setInterval(updateClock, 1000);
-    updateClock();
 
-    // Navigation
-    document.querySelectorAll("nav .btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("nav .btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        document.querySelectorAll("main section").forEach(sec => sec.classList.remove("active"));
-        document.getElementById(btn.dataset.page + "Section").classList.add("active");
-      });
+    const days = Math.floor(diff / DAY);
+    const hours = Math.floor((diff % DAY) / (1000*60*60));
+    const minutes = Math.floor((diff % (1000*60*60)) / (1000*60));
+    const seconds = Math.floor((diff % (1000*60)) / 1000);
+
+    el.days.textContent = days;
+    el.hours.textContent = pad(hours);
+    el.minutes.textContent = pad(minutes);
+    el.seconds.textContent = pad(seconds);
+    el.endDate.textContent = toDate.toLocaleString();
+
+    const pct = Math.min(100, (elapsed / total) * 100);
+    el.bar.style.width = pct.toFixed(2) + '%';
+    el.percent.textContent = pct.toFixed(1) + '%';
+    el.elapsedBadge.textContent = `Elapsed: ${Math.floor(elapsed / DAY)} days`;
+    el.remainingBadge.textContent = `Remaining: ${days} days`;
+    el.status.textContent = "Counting down…";
+  }
+
+  // Auto-setup countdown for 31 Jan 23:59
+  function startAutoCountdown(){
+    clearInterval(countdown);
+    const now = new Date();
+    let year = now.getFullYear();
+    let toDate = new Date(year, 0, 31, 23, 59, 59);
+    if(now > toDate){
+      year++;
+      toDate = new Date(year, 0, 31, 23, 59, 59);
+    }
+    const fromDate = now;
+    tick(fromDate, toDate);
+    countdown = setInterval(() => tick(fromDate, toDate), 1000);
+  }
+  startAutoCountdown();
+
+  // Live Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('liveClock').textContent = 
+      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Navigation
+  document.querySelectorAll("nav .btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("nav .btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
+      const target = document.getElementById(btn.dataset.page + "Section");
+      if (target) target.style.display = "block";
     });
-  </script>
+  });
+  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
+  document.getElementById("timerSection").style.display = "block";
+
+  /* ==========================
+     TO-DO LIST FUNCTIONALITY
+  ========================== */
+  const taskInput = document.getElementById("taskInput");
+  const addTaskBtn = document.getElementById("addTask");
+  const taskList = document.getElementById("taskList");
+
+  function saveTasks(){
+  const tasks = [...taskList.querySelectorAll("li")].map(li => {
+    return {
+      text: li.querySelector("span").textContent.trim(),
+      completed: li.classList.contains("completed")
+    };
+  });
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function loadTasks(){
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  tasks.forEach(task => addTask(task.text, task.completed));
+}
+
+function addTask(text, completed = false){
+  const li = document.createElement("li");
+
+  const taskLeft = document.createElement("div");
+  taskLeft.className = "task-left";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = completed;
+  if(completed) li.classList.add("completed");
+
+  checkbox.addEventListener("change", () => {
+    if(checkbox.checked) li.classList.add("completed");
+    else li.classList.remove("completed");
+    saveTasks();  // save state whenever checkbox changes
+  });
+
+  const span = document.createElement("span");
+  span.textContent = text;
+
+  taskLeft.appendChild(checkbox);
+  taskLeft.appendChild(span);
+  li.appendChild(taskLeft);
+
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "❌";
+  delBtn.addEventListener("click", () => { li.remove(); saveTasks(); });
+  li.appendChild(delBtn);
+
+  taskList.appendChild(li);
+}
+
+
+  addTaskBtn.addEventListener("click", () => {
+    const taskText = taskInput.value.trim();
+    if(taskText === "") return;
+    addTask(taskText);
+    taskInput.value = "";
+    saveTasks();
+  });
+  taskInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") addTaskBtn.click();
+  });
+  loadTasks();
+
+  /* ==========================
+     STOPWATCH FUNCTIONALITY
+  ========================== */
+  let stopwatchInterval;
+  let elapsedTime = 0;
+  let running = false;
+  const stopwatchDisplay = document.getElementById("stopwatchDisplay");
+  const startStopwatchBtn = document.getElementById("startStopwatch");
+  const resetStopwatchBtn = document.getElementById("resetStopwatch");
+
+  function formatTime(ms){
+    let totalSeconds = Math.floor(ms / 1000);
+    let hours = pad(Math.floor(totalSeconds / 3600));
+    let minutes = pad(Math.floor((totalSeconds % 3600) / 60));
+    let seconds = pad(totalSeconds % 60);
+    return `${hours}:${minutes}:${seconds}`;
+  }
+  function updateStopwatch(){
+    stopwatchDisplay.textContent = formatTime(elapsedTime);
+  }
+
+  function saveStopwatchState(){
+    localStorage.setItem("stopwatch", JSON.stringify({ elapsedTime, running }));
+  }
+  function loadStopwatchState(){
+    const state = JSON.parse(localStorage.getItem("stopwatch") || "{}");
+    if(state.elapsedTime) elapsedTime = state.elapsedTime;
+    if(state.running){
+      startStopwatchBtn.click(); // auto start
+    } else {
+      updateStopwatch();
+    }
+  }
+
+  startStopwatchBtn.addEventListener("click", () => {
+    if(!running){
+      running = true;
+      startStopwatchBtn.textContent = "Pause";
+      const startTime = Date.now() - elapsedTime;
+      stopwatchInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        updateStopwatch();
+        saveStopwatchState();
+      }, 100);
+    } else {
+      running = false;
+      startStopwatchBtn.textContent = "Start";
+      clearInterval(stopwatchInterval);
+      saveStopwatchState();
+    }
+  });
+  resetStopwatchBtn.addEventListener("click", () => {
+    running = false;
+    clearInterval(stopwatchInterval);
+    elapsedTime =0;
+    updateStopwatch();
+    startStopwatchBtn.textContent = "Start";
+    saveStopwatchState();
+  });
+
+  // Load stopwatch state on page load
+  loadStopwatchState();
+
+  /* ==========================
+     TIMER START/RESET HANDLERS
+  ========================== */
+  const fromDateInput = document.getElementById("fromDate");
+  const toDateInput = document.getElementById("toDate");
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("reset");
+
+  startBtn.addEventListener("click", () => {
+    const from = new Date(fromDateInput.value);
+    const to = new Date(toDateInput.value);
+    if(isNaN(from) || isNaN(to) || from >= to){
+      alert("Please select valid dates!");
+      return;
+    }
+    clearInterval(countdown);
+    tick(from, to);
+    countdown = setInterval(() => tick(from, to), 1000);
+  });
+
+  resetBtn.addEventListener("click", () => {
+    clearInterval(countdown);
+    startAutoCountdown();
+    fromDateInput.value = "";
+    toDateInput.value = "";
+  });
+
+  /* ==========================
+     MOBILE RESPONSIVENESS
+  ========================== */
+  // Already mostly responsive via flex/grid + clamp() fonts
+  // Additional tweak: stack nav buttons on very small screens
+  const mediaQuery = window.matchMedia("(max-width: 600px)");
+  function handleSmallScreen(e){
+    if(e.matches){
+      document.querySelector("nav").style.flexDirection = "column";
+    } else {
+      document.querySelector("nav").style.flexDirection = "row";
+    }
+  }
+  mediaQuery.addListener(handleSmallScreen);
+  handleSmallScreen(mediaQuery);
+
+</script>
 </body>
 </html>
