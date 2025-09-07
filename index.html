@@ -191,6 +191,12 @@
       font-size: 16px;
     }
 
+    .btn, button {
+        cursor: pointer !important;
+    }
+
+
+
     .btn.primary { border-color: rgba(124,92,255,.6); background: linear-gradient(135deg, rgba(124,92,255,.35), rgba(0,224,184,.25)); }
     .btn.danger { border-color: rgba(255,107,107,.5); background: linear-gradient(135deg, rgba(255,107,107,.35), rgba(255,107,107,.15)); }
     .timer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0 14px; }
@@ -210,7 +216,7 @@
     <header>
       <div>
         <div class="title"><span class="emoji">⏳</span> <span>Kiyaro</span></div>
-        <div id="status" class="subtitle" aria-live="polite">Tick Tock, Count Time Your Way.</div>
+        <div id="status" class="subtitle" aria-live="polite">Time Flies… Let’s Track It!.</div>
       </div>
       <div id="liveClock">00:00:00</div>
     </header>
@@ -267,13 +273,15 @@
       </section>
     </main>
 
-    <footer>Tip: choose both dates to start your countdown.</footer>
+    <footer>Tip: Tick Tock, Count Time Your Way.</footer>
   </div>
 
 <script>
-  let countdown;
-  const DAY = 24 * 60 * 60 * 1000;
-  const pad = n => String(n).padStart(2, '0');
+  // ====== ELEMENTS ======
+  const fromDateInput = document.getElementById("fromDate");
+  const toDateInput = document.getElementById("toDate");
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("reset");
 
   const el = {
     days: document.getElementById('days'),
@@ -288,6 +296,11 @@
     remainingBadge: document.getElementById('remainingBadge')
   };
 
+  let countdown;
+  const DAY = 24 * 60 * 60 * 1000;
+  const pad = n => String(n).padStart(2, '0');
+
+  // ====== COUNTDOWN TICK ======
   function tick(fromDate, toDate){
     const now = new Date();
     const diff = toDate - now;
@@ -303,6 +316,8 @@
       el.seconds.textContent = "00";
       el.bar.style.width = "100%";
       el.percent.textContent = "100%";
+      el.elapsedBadge.textContent = `Elapsed: ${Math.floor(total / DAY)} days`;
+      el.remainingBadge.textContent = `Remaining: 0 days`;
       return;
     }
 
@@ -325,7 +340,34 @@
     el.status.textContent = "Counting down…";
   }
 
-  // Auto-setup countdown for 31 Jan 23:59
+  // ====== LOAD TIMER STATE ======
+  function loadTimerState(){
+    const fromStored = localStorage.getItem("timerFrom");
+    const toStored = localStorage.getItem("timerTo");
+
+    if (fromStored && toStored) {
+        const from = new Date(fromStored);
+        const toRaw = new Date(toStored);
+
+        // Ensure 'to' is at end of day
+        const to = new Date(toRaw.getFullYear(), toRaw.getMonth(), toRaw.getDate(), 23, 59, 59);
+
+        if(to > new Date()){ // only if still valid
+            fromDateInput.valueAsDate = from;
+            toDateInput.valueAsDate = toRaw;
+            tick(from, to);
+            countdown = setInterval(() => tick(from, to), 1000);
+            return true;
+        } else {
+            localStorage.removeItem("timerFrom");
+            localStorage.removeItem("timerTo");
+        }
+    }
+    return false;
+}
+
+
+  // ====== AUTO COUNTDOWN ======
   function startAutoCountdown(){
     clearInterval(countdown);
     const now = new Date();
@@ -339,9 +381,10 @@
     tick(fromDate, toDate);
     countdown = setInterval(() => tick(fromDate, toDate), 1000);
   }
-  startAutoCountdown();
+loadTimerState(); // just try to load existing timer, nothing else
 
-  // Live Clock
+
+  // ====== LIVE CLOCK ======
   function updateClock() {
     const now = new Date();
     document.getElementById('liveClock').textContent = 
@@ -350,95 +393,128 @@
   setInterval(updateClock, 1000);
   updateClock();
 
-  // Navigation
+  // ====== TIMER BUTTONS ======
+  startBtn.addEventListener("click", () => {
+    const from = new Date(fromDateInput.value);
+
+    // Set to end of day for 'to' date
+    const toRaw = new Date(toDateInput.value);
+    const to = new Date(toRaw.getFullYear(), toRaw.getMonth(), toRaw.getDate(), 23, 59, 59);
+
+    if(isNaN(from) || isNaN(to) || from >= to){
+        alert("Please select valid dates!");
+        return;
+    }
+
+    localStorage.setItem("timerFrom", from.toISOString());
+    localStorage.setItem("timerTo", to.toISOString());
+
+    clearInterval(countdown);
+    tick(from, to);
+    countdown = setInterval(() => tick(from, to), 1000);
+});
+
+
+  resetBtn.addEventListener("click", () => {
+    clearInterval(countdown);
+    localStorage.removeItem("timerFrom");
+    localStorage.removeItem("timerTo");
+    fromDateInput.value = "";
+    toDateInput.value = "";
+    
+
+    fromDateInput.value = "";
+    toDateInput.value = "";
+    el.days.textContent = 0;
+    el.hours.textContent = "00";
+    el.minutes.textContent = "00";
+    el.seconds.textContent = "00";
+    el.bar.style.width = "0%";
+    el.percent.textContent = "0%";
+    el.elapsedBadge.textContent = `Elapsed: 0 days`;
+    el.remainingBadge.textContent = `Remaining: 0 days`;
+    el.status.textContent = "Time Flies… Let’s Track It!.";
+  });
+
+  // ====== NAVIGATION ======
   document.querySelectorAll("nav .btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("nav .btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
       const target = document.getElementById(btn.dataset.page + "Section");
-      if (target) target.style.display = "block";
+      if(target) target.style.display = "block";
     });
   });
   document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
   document.getElementById("timerSection").style.display = "block";
 
-  /* ==========================
-     TO-DO LIST FUNCTIONALITY
-  ========================== */
+  // ====== TO-DO LIST ======
   const taskInput = document.getElementById("taskInput");
   const addTaskBtn = document.getElementById("addTask");
   const taskList = document.getElementById("taskList");
 
   function saveTasks(){
-  const tasks = [...taskList.querySelectorAll("li")].map(li => {
-    return {
+    const tasks = [...taskList.querySelectorAll("li")].map(li => ({
       text: li.querySelector("span").textContent.trim(),
       completed: li.classList.contains("completed")
-    };
-  });
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
+    }));
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
 
-function loadTasks(){
-  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-  tasks.forEach(task => addTask(task.text, task.completed));
-}
+  function loadTasks(){
+    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    tasks.forEach(task => addTask(task.text, task.completed));
+  }
 
-function addTask(text, completed = false){
-  const li = document.createElement("li");
+  function addTask(text, completed=false){
+    const li = document.createElement("li");
 
-  const taskLeft = document.createElement("div");
-  taskLeft.className = "task-left";
+    const taskLeft = document.createElement("div");
+    taskLeft.className = "task-left";
 
-  const checkbox = document.createElement("input");
-  checkbox.type = "checkbox";
-  checkbox.checked = completed;
-  if(completed) li.classList.add("completed");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = completed;
+    if(completed) li.classList.add("completed");
 
-  checkbox.addEventListener("change", () => {
-    if(checkbox.checked) li.classList.add("completed");
-    else li.classList.remove("completed");
-    saveTasks();  // save state whenever checkbox changes
-  });
+    checkbox.addEventListener("change", () => {
+      li.classList.toggle("completed", checkbox.checked);
+      saveTasks();
+    });
 
-  const span = document.createElement("span");
-  span.textContent = text;
+    const span = document.createElement("span");
+    span.textContent = text;
 
-  taskLeft.appendChild(checkbox);
-  taskLeft.appendChild(span);
-  li.appendChild(taskLeft);
+    taskLeft.appendChild(checkbox);
+    taskLeft.appendChild(span);
+    li.appendChild(taskLeft);
 
-  const delBtn = document.createElement("button");
-  delBtn.textContent = "❌";
-  delBtn.addEventListener("click", () => { li.remove(); saveTasks(); });
-  li.appendChild(delBtn);
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "❌";
+    delBtn.addEventListener("click", () => { li.remove(); saveTasks(); });
+    li.appendChild(delBtn);
 
-  taskList.appendChild(li);
-}
-
+    taskList.appendChild(li);
+  }
 
   addTaskBtn.addEventListener("click", () => {
-    const taskText = taskInput.value.trim();
-    if(taskText === "") return;
-    addTask(taskText);
+    const text = taskInput.value.trim();
+    if(!text) return;
+    addTask(text);
     taskInput.value = "";
     saveTasks();
   });
-  taskInput.addEventListener("keydown", (e) => {
-    if(e.key === "Enter") addTaskBtn.click();
-  });
+  taskInput.addEventListener("keydown", e => { if(e.key === "Enter") addTaskBtn.click(); });
   loadTasks();
 
-  /* ==========================
-     STOPWATCH FUNCTIONALITY
-  ========================== */
-  let stopwatchInterval;
-  let elapsedTime = 0;
-  let running = false;
+  // ====== STOPWATCH ======
   const stopwatchDisplay = document.getElementById("stopwatchDisplay");
   const startStopwatchBtn = document.getElementById("startStopwatch");
   const resetStopwatchBtn = document.getElementById("resetStopwatch");
+  let stopwatchInterval;
+  let elapsedTime = 0;
+  let running = false;
 
   function formatTime(ms){
     let totalSeconds = Math.floor(ms / 1000);
@@ -447,6 +523,7 @@ function addTask(text, completed = false){
     let seconds = pad(totalSeconds % 60);
     return `${hours}:${minutes}:${seconds}`;
   }
+
   function updateStopwatch(){
     stopwatchDisplay.textContent = formatTime(elapsedTime);
   }
@@ -454,88 +531,95 @@ function addTask(text, completed = false){
   function saveStopwatchState(){
     localStorage.setItem("stopwatch", JSON.stringify({ elapsedTime, running }));
   }
+
   function loadStopwatchState(){
     const state = JSON.parse(localStorage.getItem("stopwatch") || "{}");
-    if(state.elapsedTime) elapsedTime = state.elapsedTime;
+    if(state.elapsedTime !== undefined) elapsedTime = state.elapsedTime;
+    updateStopwatch();
     if(state.running){
-      startStopwatchBtn.click(); // auto start
-    } else {
-      updateStopwatch();
+      startStopwatch();
     }
   }
 
-  startStopwatchBtn.addEventListener("click", () => {
-    if(!running){
-      running = true;
-      startStopwatchBtn.textContent = "Pause";
-      const startTime = Date.now() - elapsedTime;
-      stopwatchInterval = setInterval(() => {
-        elapsedTime = Date.now() - startTime;
-        updateStopwatch();
-        saveStopwatchState();
-      }, 100);
-    } else {
-      running = false;
-      startStopwatchBtn.textContent = "Start";
-      clearInterval(stopwatchInterval);
+ function startStopwatch() {
+  if (!running) { // currently stopped → start
+    running = true;
+    startStopwatchBtn.textContent = "Pause"; // show Pause
+    stopwatchInterval = setInterval(() => {
+      elapsedTime += 1000;
+      updateStopwatch();
       saveStopwatchState();
-    }
-  });
-  resetStopwatchBtn.addEventListener("click", () => {
-    running = false;
-    clearInterval(stopwatchInterval);
-    elapsedTime =0;
-    updateStopwatch();
-    startStopwatchBtn.textContent = "Start";
+    }, 1000);
     saveStopwatchState();
-  });
+  } else { // currently running → pause
+    running = false;
+    startStopwatchBtn.textContent = "Start"; // show Start
+    clearInterval(stopwatchInterval);
+    saveStopwatchState();
+  }
+}
 
-  // Load stopwatch state on page load
-  loadStopwatchState();
+function resetStopwatch() {
+  clearInterval(stopwatchInterval);
+  running = false;
+  elapsedTime = 0;
+  updateStopwatch();
+  saveStopwatchState();
+  startStopwatchBtn.textContent = "Start"; // reset text
+}
 
-  /* ==========================
-     TIMER START/RESET HANDLERS
-  ========================== */
-  const fromDateInput = document.getElementById("fromDate");
-  const toDateInput = document.getElementById("toDate");
-  const startBtn = document.getElementById("startBtn");
-  const resetBtn = document.getElementById("reset");
+startStopwatchBtn.addEventListener("click", startStopwatch);
+resetStopwatchBtn.addEventListener("click", resetStopwatch);
+loadStopwatchState();
 
-  startBtn.addEventListener("click", () => {
-    const from = new Date(fromDateInput.value);
-    const to = new Date(toDateInput.value);
-    if(isNaN(from) || isNaN(to) || from >= to){
-      alert("Please select valid dates!");
-      return;
-    }
-    clearInterval(countdown);
-    tick(from, to);
-    countdown = setInterval(() => tick(from, to), 1000);
-  });
 
-  resetBtn.addEventListener("click", () => {
-    clearInterval(countdown);
-    startAutoCountdown();
-    fromDateInput.value = "";
-    toDateInput.value = "";
-  });
-
-  /* ==========================
-     MOBILE RESPONSIVENESS
-  ========================== */
-  // Already mostly responsive via flex/grid + clamp() fonts
-  // Additional tweak: stack nav buttons on very small screens
+  // ====== MOBILE NAVIGATION FLEX ======
   const mediaQuery = window.matchMedia("(max-width: 600px)");
   function handleSmallScreen(e){
-    if(e.matches){
-      document.querySelector("nav").style.flexDirection = "column";
-    } else {
-      document.querySelector("nav").style.flexDirection = "row";
-    }
+    document.querySelector("nav").style.flexDirection = e.matches ? "column" : "row";
   }
   mediaQuery.addListener(handleSmallScreen);
   handleSmallScreen(mediaQuery);
 
+</script>
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
 </script>
 </body>
 </html>
